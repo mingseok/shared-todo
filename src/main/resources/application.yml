@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/todo?serverTimezone=Asia/Seoul
+    username: seok
+    password: 1234
+
+  jpa:
+    hibernate:
+      ddl-auto: create # 개발 초기니까 create, 나중에 update로
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+        use_sql_comments: true
+    open-in-view: false  # 성능 최적화
