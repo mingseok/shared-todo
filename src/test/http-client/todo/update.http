@@ -19,6 +19,20 @@ Authorization: Bearer {{authToken}}
 }
 
 
+### Todo 수정 - 태그 포함
+PUT {{baseUrl}}/api/v1/todos/{{todoId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "태그를 추가한 할 일",
+  "content": "태그가 추가되었습니다",
+  "dueDate": "2024-12-31",
+  "completed": false,
+  "tagIds": [1, 2]
+}
+
+
 ### Todo 수정 - 제목과 내용만 수정
 PUT {{baseUrl}}/api/v1/todos/{{todoId}}
 Content-Type: application/json
