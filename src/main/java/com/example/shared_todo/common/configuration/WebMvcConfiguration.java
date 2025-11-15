@@ -1,0 +1,29 @@
+package com.example.shared_todo.common.configuration;
+
+import com.example.shared_todo.common.interceptor.JwtAuthInterceptor;
+import com.example.shared_todo.common.jwt.TokenProvider;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+@RequiredArgsConstructor
+public class WebMvcConfiguration implements WebMvcConfigurer {
+
+    public static final String CLOSED_API_PREFIX = "/api/v1/**";
+    public static final String PUBLIC_API_PREFIX = "/api/public/**";
+    public static final String VIEW_PAGE_PREFIX = "/view/**";
+
+    private final TokenProvider tokenProvider;
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new JwtAuthInterceptor(tokenProvider))
+                .addPathPatterns(CLOSED_API_PREFIX)
+                .excludePathPatterns(
+                        PUBLIC_API_PREFIX,
+                        VIEW_PAGE_PREFIX
+                );
+    }
+}

@@ -13,3 +13,6 @@ spring:
         format_sql: true
         use_sql_comments: true
     open-in-view: false  # 성능 최적화
+
+jwt:
+  secret: ${JWT_SECRET}
