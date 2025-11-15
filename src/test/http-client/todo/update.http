@@ -1,0 +1,125 @@
+### Todo 수정 API 테스트
+@baseUrl = http://localhost:8080
+
+# Todo 수정
+# 먼저 member/signin.http 에서 로그인하고
+# todo/create.http 에서 Todo를 생성
+
+
+### Todo 수정 - 성공 (전체 필드 수정)
+PUT {{baseUrl}}/api/v1/todos/{{todoId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "수정된 할 일 제목",
+  "content": "수정된 내용입니다",
+  "dueDate": "2024-12-31",
+  "completed": false
+}
+
+
+### Todo 수정 - 제목과 내용만 수정
+PUT {{baseUrl}}/api/v1/todos/{{todoId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "다시 수정된 제목",
+  "content": "다시 수정된 내용"
+}
+
+
+### Todo 수정 - 완료 상태로 변경
+PUT {{baseUrl}}/api/v1/todos/{{todoId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "완료된 할 일",
+  "content": "완료 처리 테스트",
+  "dueDate": "2024-12-31",
+  "completed": true
+}
+
+
+### Todo 수정 - 미완료 상태로 변경
+PUT {{baseUrl}}/api/v1/todos/{{todoId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "다시 미완료로",
+  "content": "미완료 처리",
+  "completed": false
+}
+
+
+### Todo 수정 - 마감일 제거
+PUT {{baseUrl}}/api/v1/todos/{{todoId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "마감일 없는 할 일",
+  "content": "마감일을 제거합니다",
+  "dueDate": null
+}
+
+
+### Todo 수정 - 특정 ID로 수정 (ID를 직접 입력)
+PUT {{baseUrl}}/api/v1/todos/1
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "ID 1번 할 일 수정",
+  "content": "직접 ID를 지정한 수정"
+}
+
+
+###############################
+# 에러 케이스
+###############################
+
+### Todo 수정 - 존재하지 않는 ID
+PUT {{baseUrl}}/api/v1/todos/99999
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "존재하지 않는 Todo",
+  "content": "이 요청은 실패해야 함"
+}
+
+
+### Todo 수정 - 인증 없음 에러
+PUT {{baseUrl}}/api/v1/todos/{{todoId}}
+Content-Type: application/json
+
+{
+  "title": "인증 없는 수정 요청",
+  "content": "이 요청은 실패해야 함"
+}
+
+
+### Todo 수정 - 유효성 검증 실패 (제목 없음)
+PUT {{baseUrl}}/api/v1/todos/{{todoId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "",
+  "content": "제목이 비어있음"
+}
+
+
+### Todo 수정 - 유효성 검증 실패 (제목 너무 김)
+PUT {{baseUrl}}/api/v1/todos/{{todoId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "이 제목은 100자를 초과하는 매우 긴 제목입니다. 이 제목은 100자를 초과하는 매우 긴 제목입니다. 이 제목은 100자를 초과하는 매우 긴 제목입니다. 이 제목은 100자를 초과하는 매우 긴 제목입니다.",
+  "content": "제목이 너무 깁니다"
+}
