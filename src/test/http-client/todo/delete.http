@@ -1,0 +1,68 @@
+### Todo 삭제 API 테스트
+@baseUrl = http://localhost:8080
+
+# Todo 삭제
+# 먼저 member/signin.http 에서 로그인하고
+# todo/create.http 에서 Todo를 생성
+
+
+### Todo 삭제 - 성공
+DELETE {{baseUrl}}/api/v1/todos/{{todoId}}
+Authorization: Bearer {{authToken}}
+
+
+### Todo 삭제 - 특정 ID로 삭제 (ID를 직접 입력)
+DELETE {{baseUrl}}/api/v1/todos/2
+Authorization: Bearer {{authToken}}
+
+
+###############################
+# 에러 케이스
+###############################
+
+### Todo 삭제 - 이미 삭제된 ID
+DELETE {{baseUrl}}/api/v1/todos/{{todoId}}
+Authorization: Bearer {{authToken}}
+
+
+### Todo 삭제 - 존재하지 않는 ID
+DELETE {{baseUrl}}/api/v1/todos/99999
+Authorization: Bearer {{authToken}}
+
+
+### Todo 삭제 - 인증 없음 에러
+DELETE {{baseUrl}}/api/v1/todos/1
+
+
+###############################
+# 통합 시나리오: 생성 → 조회 → 삭제 → 확인
+###############################
+
+### 1. Todo 생성
+POST {{baseUrl}}/api/v1/todos
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "삭제 테스트용 할 일",
+  "content": "이 Todo는 삭제될 예정입니다"
+}
+
+> {%
+    client.global.set("deleteTestId", response.body.data.id);
+    client.log("Delete Test Todo ID: " + response.body.data.id);
+%}
+
+### 2. 생성된 Todo 조회 확인
+GET {{baseUrl}}/api/v1/todos/{{deleteTestId}}
+Authorization: Bearer {{authToken}}
+
+
+### 3. Todo 삭제
+DELETE {{baseUrl}}/api/v1/todos/{{deleteTestId}}
+Authorization: Bearer {{authToken}}
+
+
+### 4. 삭제 확인 (404 에러 발생해야 함)
+GET {{baseUrl}}/api/v1/todos/{{deleteTestId}}
+Authorization: Bearer {{authToken}}
