@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -32,6 +33,9 @@ public class Todo extends BaseEntity {
 
     @Column(name = "display_order", nullable = false)
     private Integer displayOrder = 0;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
     @Builder
     public Todo(String title, String content, LocalDate dueDate, Long memberId, Integer displayOrder) {
@@ -64,6 +68,14 @@ public class Todo extends BaseEntity {
 
     public void updateDisplayOrder(Integer displayOrder) {
         this.displayOrder = displayOrder;
+    }
+
+    public void delete() {
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    public boolean isDeleted() {
+        return this.deletedAt != null;
     }
 
     public boolean isOwner(Long memberId) {
