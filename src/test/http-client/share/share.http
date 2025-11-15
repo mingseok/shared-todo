@@ -1,0 +1,71 @@
+### Todo 공유 API 테스트
+@baseUrl = http://localhost:8080
+
+# Todo 공유
+# 먼저 member/signin.http 에서 로그인하고
+# todo/create.http 에서 Todo를 생성
+
+
+### 1. Todo 공유 링크 생성 - 성공
+# 이 요청을 실행하고, 응답에서 shareToken을 복사하세요
+POST {{baseUrl}}/api/v1/todos/1/share
+Authorization: Bearer {{authToken}}
+
+
+### 2. 공유된 Todo 조회 - 인증 없이 (Public API)
+# 위 응답에서 받은 shareToken을 아래에 직접 붙여넣으세요
+GET {{baseUrl}}/api/public/todos/share/여기에-shareToken-붙여넣기
+
+
+### Todo 공유 링크 생성 - 다른 Todo
+POST {{baseUrl}}/api/v1/todos/2/share
+Authorization: Bearer {{authToken}}
+
+
+### Todo 공유 취소 - 성공
+DELETE {{baseUrl}}/api/v1/todos/1/share
+Authorization: Bearer {{authToken}}
+
+
+###############################
+# 에러 케이스
+###############################
+
+### Todo 공유 링크 생성 - 존재하지 않는 Todo
+POST {{baseUrl}}/api/v1/todos/99999/share
+Authorization: Bearer {{authToken}}
+
+
+### Todo 공유 링크 생성 - 권한 없음 (다른 사용자의 Todo)
+# 다른 사용자로 로그인 후 테스트
+POST {{baseUrl}}/api/v1/todos/1/share
+Authorization: Bearer {{authToken}}
+
+
+### Todo 공유 링크 생성 - 이미 공유된 Todo
+# 이미 공유된 Todo를 다시 공유하려고 시도
+POST {{baseUrl}}/api/v1/todos/1/share
+Authorization: Bearer {{authToken}}
+
+
+### Todo 공유 링크 생성 - 인증 없음
+POST {{baseUrl}}/api/v1/todos/1/share
+
+
+### 공유된 Todo 조회 - 존재하지 않는 토큰
+GET {{baseUrl}}/api/public/todos/share/invalid-token-12345
+
+
+### Todo 공유 취소 - 존재하지 않는 공유
+DELETE {{baseUrl}}/api/v1/todos/99999/share
+Authorization: Bearer {{authToken}}
+
+
+### Todo 공유 취소 - 권한 없음 (다른 사용자가 공유한 Todo)
+# 다른 사용자로 로그인 후 테스트
+DELETE {{baseUrl}}/api/v1/todos/1/share
+Authorization: Bearer {{authToken}}
+
+
+### Todo 공유 취소 - 인증 없음
+DELETE {{baseUrl}}/api/v1/todos/1/share
