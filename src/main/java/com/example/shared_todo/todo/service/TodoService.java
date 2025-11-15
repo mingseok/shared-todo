@@ -56,4 +56,29 @@ public class TodoService {
         }
         return todoRepository.findAll();
     }
+
+    @Transactional
+    public TodoResponse updateTodo(Long todoId, UpdateTodoRequest request, Long memberId) {
+        Todo todo = todoRepository.findById(todoId)
+                .orElseThrow(() -> new TodoException(TodoError.TODO_NOT_FOUND));
+
+        if (!todo.isOwner(memberId)) {
+            throw new TodoException(TodoError.FORBIDDEN_TODO_ACCESS);
+        }
+
+        todo.update(request.getTitle(), request.getContent(),
+                request.getDueDate(), request.getCompleted());
+        return TodoResponse.from(todo);
+    }
+
+    @Transactional
+    public void deleteTodo(Long todoId, Long memberId) {
+        Todo todo = todoRepository.findById(todoId)
+                .orElseThrow(() -> new TodoException(TodoError.TODO_NOT_FOUND));
+
+        if (!todo.isOwner(memberId)) {
+            throw new TodoException(TodoError.FORBIDDEN_TODO_ACCESS);
+        }
+        todoRepository.delete(todo);
+    }
 }
