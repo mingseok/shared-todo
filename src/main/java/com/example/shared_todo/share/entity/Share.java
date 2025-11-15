@@ -13,7 +13,6 @@ import java.util.UUID;
 
 @Entity
 @Getter
-@Table(name = "share")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Share extends BaseEntity {
 
