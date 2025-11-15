@@ -30,13 +30,17 @@ public class Todo extends BaseEntity {
     @Column(name = "completed", nullable = false)
     private boolean completed = false;
 
+    @Column(name = "display_order", nullable = false)
+    private Integer displayOrder = 0;
+
     @Builder
-    public Todo(String title, String content, LocalDate dueDate, Long memberId) {
+    public Todo(String title, String content, LocalDate dueDate, Long memberId, Integer displayOrder) {
         this.title = title;
         this.content = content;
         this.dueDate = dueDate;
         this.memberId = memberId;
         this.completed = false;
+        this.displayOrder = displayOrder != null ? displayOrder : 0;
     }
 
     public static Todo create(String title, String content, LocalDate dueDate, Long memberId) {
@@ -45,6 +49,7 @@ public class Todo extends BaseEntity {
                 .content(content)
                 .dueDate(dueDate)
                 .memberId(memberId)
+                .displayOrder(0)
                 .build();
     }
 
@@ -55,6 +60,10 @@ public class Todo extends BaseEntity {
         if (completed != null) {
             this.completed = completed;
         }
+    }
+
+    public void updateDisplayOrder(Integer displayOrder) {
+        this.displayOrder = displayOrder;
     }
 
     public boolean isOwner(Long memberId) {
