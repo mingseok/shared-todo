@@ -1,0 +1,154 @@
+### Todo 순서 변경 API 테스트
+@baseUrl = http://localhost:8080
+
+# Todo 순서 변경
+# 먼저 member/signin.http 에서 로그인하고
+# todo/create.http 에서 여러 개의 Todo를 생성
+
+
+### Todo 순서 변경 - 성공
+PUT {{baseUrl}}/api/v1/todos/reorder
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "orders": [
+    {
+      "todoId": 1,
+      "displayOrder": 0
+    },
+    {
+      "todoId": 2,
+      "displayOrder": 1
+    },
+    {
+      "todoId": 3,
+      "displayOrder": 2
+    }
+  ]
+}
+
+
+### Todo 순서 변경 - 순서 바꾸기 (1번과 3번 위치 변경)
+PUT {{baseUrl}}/api/v1/todos/reorder
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "orders": [
+    {
+      "todoId": 3,
+      "displayOrder": 0
+    },
+    {
+      "todoId": 2,
+      "displayOrder": 1
+    },
+    {
+      "todoId": 1,
+      "displayOrder": 2
+    }
+  ]
+}
+
+
+### Todo 순서 변경 - 일부만 변경
+PUT {{baseUrl}}/api/v1/todos/reorder
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "orders": [
+    {
+      "todoId": 1,
+      "displayOrder": 5
+    }
+  ]
+}
+
+
+###############################
+# 에러 케이스
+###############################
+
+### Todo 순서 변경 - 존재하지 않는 Todo
+PUT {{baseUrl}}/api/v1/todos/reorder
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "orders": [
+    {
+      "todoId": 99999,
+      "displayOrder": 0
+    }
+  ]
+}
+
+
+### Todo 순서 변경 - 권한 없는 Todo (다른 사용자의 Todo)
+# 다른 사용자로 로그인 후 테스트
+PUT {{baseUrl}}/api/v1/todos/reorder
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "orders": [
+    {
+      "todoId": 1,
+      "displayOrder": 0
+    }
+  ]
+}
+
+
+### Todo 순서 변경 - 인증 없음 에러
+PUT {{baseUrl}}/api/v1/todos/reorder
+Content-Type: application/json
+
+{
+  "orders": [
+    {
+      "todoId": 1,
+      "displayOrder": 0
+    }
+  ]
+}
+
+
+### Todo 순서 변경 - 유효성 검증 실패 (빈 배열)
+PUT {{baseUrl}}/api/v1/todos/reorder
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "orders": []
+}
+
+
+### Todo 순서 변경 - 유효성 검증 실패 (todoId 없음)
+PUT {{baseUrl}}/api/v1/todos/reorder
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "orders": [
+    {
+      "displayOrder": 0
+    }
+  ]
+}
+
+
+### Todo 순서 변경 - 유효성 검증 실패 (displayOrder 없음)
+PUT {{baseUrl}}/api/v1/todos/reorder
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "orders": [
+    {
+      "todoId": 1
+    }
+  ]
+}

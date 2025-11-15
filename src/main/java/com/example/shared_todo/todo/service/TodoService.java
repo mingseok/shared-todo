@@ -7,6 +7,8 @@ import com.example.shared_todo.todo.exception.TodoError;
 import com.example.shared_todo.todo.exception.TodoException;
 import com.example.shared_todo.todo.repository.TodoRepository;
 import com.example.shared_todo.todo.service.dto.request.CreateTodoRequest;
+import com.example.shared_todo.todo.service.dto.request.ReorderTodoRequest;
+import com.example.shared_todo.todo.service.dto.request.TodoOrderRequest;
 import com.example.shared_todo.todo.service.dto.request.UpdateTodoRequest;
 import com.example.shared_todo.todo.service.dto.response.TodoResponse;
 import com.example.shared_todo.todotag.entity.TodoTag;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -51,7 +54,8 @@ public class TodoService {
     @Transactional(readOnly = true)
     public List<TodoResponse> findTodos(Long memberId, Boolean completed, Long tagId) {
         List<Todo> todos = findTodosByCondition(memberId, completed, tagId);
-        return todos.stream()
+        List<Todo> sortedTodos = sortTodosByDisplayOrder(todos);
+        return sortedTodos.stream()
                 .map(this::buildTodoResponse)
                 .toList();
     }
@@ -92,6 +96,13 @@ public class TodoService {
         return todoRepository.findByIdIn(todoIds);
     }
 
+    private List<Todo> sortTodosByDisplayOrder(List<Todo> todos) {
+        return todos.stream()
+                .sorted(Comparator.comparing(Todo::getDisplayOrder)
+                        .thenComparing(Todo::getId))
+                .toList();
+    }
+
     @Transactional
     public TodoResponse updateTodo(Long todoId, UpdateTodoRequest request, Long memberId) {
         Todo todo = todoRepository.findById(todoId)
@@ -109,6 +120,28 @@ public class TodoService {
         }
 
         return buildTodoResponse(todo);
+    }
+
+    @Transactional
+    public void reorderTodos(ReorderTodoRequest request, Long memberId) {
+        List<Long> todoIds = request.getOrders().stream()
+                .map(TodoOrderRequest::getTodoId)
+                .toList();
+
+        List<Todo> todos = todoRepository.findByIdIn(todoIds);
+
+        for (TodoOrderRequest orderItem : request.getOrders()) {
+            Todo todo = todos.stream()
+                    .filter(t -> t.getId().equals(orderItem.getTodoId()))
+                    .findFirst()
+                    .orElseThrow(() -> new TodoException(TodoError.TODO_NOT_FOUND));
+
+            if (!todo.isOwner(memberId)) {
+                throw new TodoException(TodoError.FORBIDDEN_TODO_ACCESS);
+            }
+
+            todo.updateDisplayOrder(orderItem.getDisplayOrder());
+        }
     }
 
     @Transactional
