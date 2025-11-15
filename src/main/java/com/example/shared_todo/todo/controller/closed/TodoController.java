@@ -4,6 +4,7 @@ import com.example.shared_todo.common.dto.ApiResponse;
 import com.example.shared_todo.common.identity.annotation.AuthMemberId;
 import com.example.shared_todo.todo.service.TodoService;
 import com.example.shared_todo.todo.service.dto.request.CreateTodoRequest;
+import com.example.shared_todo.todo.service.dto.request.ReorderTodoRequest;
 import com.example.shared_todo.todo.service.dto.request.UpdateTodoRequest;
 import com.example.shared_todo.todo.service.dto.response.TodoResponse;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +58,15 @@ public class TodoController {
     ) {
         TodoResponse response = todoService.updateTodo(id, request, memberId);
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PutMapping("/reorder")
+    public ResponseEntity<ApiResponse<Void>> reorder(
+            @Validated @RequestBody ReorderTodoRequest request,
+            @AuthMemberId Long memberId
+    ) {
+        todoService.reorderTodos(request, memberId);
+        return ResponseEntity.ok(ApiResponse.successEmpty());
     }
 
     @DeleteMapping("/{id}")
