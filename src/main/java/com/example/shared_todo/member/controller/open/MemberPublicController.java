@@ -2,7 +2,9 @@ package com.example.shared_todo.member.controller.open;
 
 import com.example.shared_todo.common.dto.ApiResponse;
 import com.example.shared_todo.member.service.MemberService;
+import com.example.shared_todo.member.service.dto.request.SignInRequest;
 import com.example.shared_todo.member.service.dto.request.SignUpRequest;
+import com.example.shared_todo.member.service.dto.response.JwtTokenResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,5 +28,13 @@ public class MemberPublicController {
         memberService.signUp(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.successEmpty());
+    }
+
+    @PostMapping("/signin")
+    public ResponseEntity<ApiResponse<JwtTokenResponse>> signin(
+            @Validated @RequestBody SignInRequest request
+    ) {
+        JwtTokenResponse response = memberService.signIn(request);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 }
