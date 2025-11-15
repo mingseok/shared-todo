@@ -21,6 +21,7 @@ public class TodoResponse {
     private final Long dDay;
     private final Long memberId;
     private final boolean completed;
+    private final Integer displayOrder;
     private final List<TagResponse> tags;
     private final String createdAt;
     private final String updatedAt;
@@ -34,6 +35,7 @@ public class TodoResponse {
                 .dDay(calculateDDay(todo.getDueDate()))
                 .memberId(todo.getMemberId())
                 .completed(todo.isCompleted())
+                .displayOrder(todo.getDisplayOrder())
                 .tags(todoTags.stream()
                         .map(todoTag -> TagResponse.from(todoTag.getTag()))
                         .toList())
