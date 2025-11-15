@@ -42,7 +42,7 @@ public class ShareService {
 
     @Transactional
     public ShareResponse createShare(Long todoId, Long memberId) {
-        Todo todo = todoRepository.findById(todoId)
+        Todo todo = todoRepository.findByIdAndDeletedAtIsNull(todoId)
                 .orElseThrow(() -> new TodoException(TodoError.TODO_NOT_FOUND));
 
         Member member = memberRepository.findById(memberId)
@@ -73,6 +73,11 @@ public class ShareService {
         }
 
         Todo todo = share.getTodo();
+        
+        if (todo.isDeleted()) {
+            throw new TodoException(TodoError.TODO_NOT_FOUND);
+        }
+
         List<TodoTag> todoTags = todoTagRepository.findByTodoId(todo.getId());
         return TodoResponse.from(todo, todoTags);
     }

@@ -60,7 +60,7 @@ public class TodoService {
 
     @Transactional(readOnly = true)
     public TodoResponse findTodoById(Long todoId) {
-        Todo todo = todoRepository.findById(todoId)
+        Todo todo = todoRepository.findByIdAndDeletedAtIsNull(todoId)
                 .orElseThrow(() -> new TodoException(TodoError.TODO_NOT_FOUND));
         return buildTodoResponse(todo);
     }
@@ -80,15 +80,15 @@ public class TodoService {
         }
 
         if (memberId != null && completed != null) {
-            return todoRepository.findByMemberIdAndCompleted(memberId, completed);
+            return todoRepository.findByMemberIdAndCompletedAndDeletedAtIsNull(memberId, completed);
         }
         if (memberId != null) {
-            return todoRepository.findByMemberId(memberId);
+            return todoRepository.findByMemberIdAndDeletedAtIsNull(memberId);
         }
         if (completed != null) {
-            return todoRepository.findByCompleted(completed);
+            return todoRepository.findByCompletedAndDeletedAtIsNull(completed);
         }
-        return todoRepository.findAll();
+        return todoRepository.findByDeletedAtIsNull();
     }
 
     private List<Todo> findTodosByTag(Long memberId, Boolean completed, Long tagId) {
@@ -99,15 +99,15 @@ public class TodoService {
         }
 
         if (memberId != null && completed != null) {
-            return todoRepository.findByIdInAndMemberIdAndCompleted(todoIds, memberId, completed);
+            return todoRepository.findByIdInAndMemberIdAndCompletedAndDeletedAtIsNull(todoIds, memberId, completed);
         }
         if (memberId != null) {
-            return todoRepository.findByIdInAndMemberId(todoIds, memberId);
+            return todoRepository.findByIdInAndMemberIdAndDeletedAtIsNull(todoIds, memberId);
         }
         if (completed != null) {
-            return todoRepository.findByIdInAndCompleted(todoIds, completed);
+            return todoRepository.findByIdInAndCompletedAndDeletedAtIsNull(todoIds, completed);
         }
-        return todoRepository.findByIdIn(todoIds);
+        return todoRepository.findByIdInAndDeletedAtIsNull(todoIds);
     }
 
     private List<Todo> sortTodosByDisplayOrder(List<Todo> todos) {
@@ -119,7 +119,7 @@ public class TodoService {
 
     @Transactional
     public TodoResponse updateTodo(Long todoId, UpdateTodoRequest request, Long memberId) {
-        Todo todo = todoRepository.findById(todoId)
+        Todo todo = todoRepository.findByIdAndDeletedAtIsNull(todoId)
                 .orElseThrow(() -> new TodoException(TodoError.TODO_NOT_FOUND));
 
         Member member = memberRepository.findById(memberId)
@@ -146,7 +146,7 @@ public class TodoService {
                 .map(TodoOrderItem::getTodoId)
                 .toList();
 
-        List<Todo> todos = todoRepository.findByIdIn(todoIds);
+        List<Todo> todos = todoRepository.findByIdInAndDeletedAtIsNull(todoIds);
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberException(MemberError.MEMBER_NOT_FOUND));
@@ -169,7 +169,7 @@ public class TodoService {
 
     @Transactional
     public void deleteTodo(Long todoId, Long memberId) {
-        Todo todo = todoRepository.findById(todoId)
+        Todo todo = todoRepository.findByIdAndDeletedAtIsNull(todoId)
                 .orElseThrow(() -> new TodoException(TodoError.TODO_NOT_FOUND));
 
         Member member = memberRepository.findById(memberId)
@@ -180,8 +180,7 @@ public class TodoService {
             throw new TodoException(TodoError.FORBIDDEN_TODO_ACCESS);
         }
 
-        todoTagRepository.deleteByTodoId(todoId);
-        todoRepository.delete(todo);
+        todo.delete();
     }
 
     private TodoPermissionChecker getPermissionChecker() {
@@ -202,7 +201,7 @@ public class TodoService {
     private void updateTodoTags(Long todoId, List<Long> tagIds) {
         todoTagRepository.deleteByTodoId(todoId);
         if (!tagIds.isEmpty()) {
-            Todo todo = todoRepository.findById(todoId)
+            Todo todo = todoRepository.findByIdAndDeletedAtIsNull(todoId)
                     .orElseThrow(() -> new TodoException(TodoError.TODO_NOT_FOUND));
             addTagsToTodo(todo, tagIds);
         }
