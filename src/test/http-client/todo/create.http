@@ -1,0 +1,124 @@
+### Todo 생성 API 테스트
+@baseUrl = http://localhost:8080
+
+# Todo 생성
+# 먼저 member/signin.http 에서 로그인하여 JWT 토큰을 받기
+
+
+### Todo 생성 - 성공
+POST {{baseUrl}}/api/v1/todos
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "첫 번째 할 일",
+  "content": "IntelliJ HTTP Client로 테스트하기",
+  "dueDate": "2024-12-31"
+}
+
+> {%
+    client.global.set("todoId", response.body.data.id);
+    client.log("Todo ID saved: " + response.body.data.id);
+%}
+
+
+### Todo 생성 - 마감일 포함
+POST {{baseUrl}}/api/v1/todos
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "마감일이 있는 할 일",
+  "content": "D-Day 계산 테스트",
+  "dueDate": "2024-12-25"
+}
+
+
+### Todo 생성 - 마감일 없음
+POST {{baseUrl}}/api/v1/todos
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "마감일 없는 할 일",
+  "content": "언젠가 할 일"
+}
+
+
+### Todo 생성 - 내용 없음
+POST {{baseUrl}}/api/v1/todos
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "내용 없는 할 일"
+}
+
+
+### Todo 생성 1
+POST {{baseUrl}}/api/v1/todos
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "할 일 1",
+  "content": "첫 번째",
+  "dueDate": "2024-12-20"
+}
+
+
+### Todo 생성 2
+POST {{baseUrl}}/api/v1/todos
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "할 일 2",
+  "content": "두 번째",
+  "dueDate": "2024-12-25"
+}
+
+
+### Todo 생성 3
+POST {{baseUrl}}/api/v1/todos
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "할 일 3",
+  "content": "세 번째",
+  "dueDate": "2024-12-30"
+}
+
+###############################
+# 에러 케이스
+###############################
+
+### Todo 생성 - 인증 없음 에러
+POST {{baseUrl}}/api/v1/todos
+Content-Type: application/json
+
+{
+  "title": "인증 없는 요청",
+  "content": "이 요청은 실패해야 함"
+}
+
+### Todo 생성 - 유효성 검증 실패 (제목 없음)
+POST {{baseUrl}}/api/v1/todos
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "",
+  "content": "제목이 비어있음"
+}
+
+### Todo 생성 - 유효성 검증 실패 (제목 너무 김)
+POST {{baseUrl}}/api/v1/todos
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "이 제목은 100자를 초과하는 매우 긴 제목입니다. 이 제목은 100자를 초과하는 매우 긴 제목입니다. 이 제목은 100자를 초과하는 매우 긴 제목입니다. 이 제목은 100자를 초과하는 매우 긴 제목입니다.",
+  "content": "제목이 너무 깁니다"
+}
