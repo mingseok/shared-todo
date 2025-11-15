@@ -1,5 +1,7 @@
 package com.example.shared_todo.todo.service;
 
+import com.example.shared_todo.tag.entity.Tag;
+import com.example.shared_todo.tag.repository.TagRepository;
 import com.example.shared_todo.todo.entity.Todo;
 import com.example.shared_todo.todo.exception.TodoError;
 import com.example.shared_todo.todo.exception.TodoException;
@@ -7,6 +9,8 @@ import com.example.shared_todo.todo.repository.TodoRepository;
 import com.example.shared_todo.todo.service.dto.request.CreateTodoRequest;
 import com.example.shared_todo.todo.service.dto.request.UpdateTodoRequest;
 import com.example.shared_todo.todo.service.dto.response.TodoResponse;
+import com.example.shared_todo.todotag.entity.TodoTag;
+import com.example.shared_todo.todotag.repository.TodoTagRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +22,8 @@ import java.util.List;
 public class TodoService {
 
     private final TodoRepository todoRepository;
+    private final TagRepository tagRepository;
+    private final TodoTagRepository todoTagRepository;
 
     @Transactional
     public TodoResponse createTodo(CreateTodoRequest request, Long memberId) {
@@ -26,21 +32,26 @@ public class TodoService {
                 request.getDueDate(), memberId
         );
         Todo savedTodo = todoRepository.save(todo);
-        return TodoResponse.from(savedTodo);
+
+        if (request.getTagIds() != null && !request.getTagIds().isEmpty()) {
+            addTagsToTodo(savedTodo, request.getTagIds());
+        }
+
+        return buildTodoResponse(savedTodo);
     }
 
     @Transactional(readOnly = true)
     public TodoResponse findTodoById(Long todoId) {
         Todo todo = todoRepository.findById(todoId)
                 .orElseThrow(() -> new TodoException(TodoError.TODO_NOT_FOUND));
-        return TodoResponse.from(todo);
+        return buildTodoResponse(todo);
     }
 
     @Transactional(readOnly = true)
     public List<TodoResponse> findTodos(Long memberId, Boolean completed) {
         List<Todo> todos = findTodosByCondition(memberId, completed);
         return todos.stream()
-                .map(TodoResponse::from)
+                .map(this::buildTodoResponse)
                 .toList();
     }
 
@@ -68,7 +79,12 @@ public class TodoService {
 
         todo.update(request.getTitle(), request.getContent(),
                 request.getDueDate(), request.getCompleted());
-        return TodoResponse.from(todo);
+
+        if (request.getTagIds() != null) {
+            updateTodoTags(todoId, request.getTagIds());
+        }
+
+        return buildTodoResponse(todo);
     }
 
     @Transactional
@@ -79,6 +95,30 @@ public class TodoService {
         if (!todo.isOwner(memberId)) {
             throw new TodoException(TodoError.FORBIDDEN_TODO_ACCESS);
         }
+
+        todoTagRepository.deleteByTodoId(todoId);
         todoRepository.delete(todo);
+    }
+
+    private void addTagsToTodo(Todo todo, List<Long> tagIds) {
+        List<Tag> tags = tagRepository.findByIdIn(tagIds);
+        for (Tag tag : tags) {
+            TodoTag todoTag = TodoTag.of(todo, tag);
+            todoTagRepository.save(todoTag);
+        }
+    }
+
+    private void updateTodoTags(Long todoId, List<Long> tagIds) {
+        todoTagRepository.deleteByTodoId(todoId);
+        if (!tagIds.isEmpty()) {
+            Todo todo = todoRepository.findById(todoId)
+                    .orElseThrow(() -> new TodoException(TodoError.TODO_NOT_FOUND));
+            addTagsToTodo(todo, tagIds);
+        }
+    }
+
+    private TodoResponse buildTodoResponse(Todo todo) {
+        List<TodoTag> todoTags = todoTagRepository.findByTodoId(todo.getId());
+        return TodoResponse.from(todo, todoTags);
     }
 }
