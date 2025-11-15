@@ -47,4 +47,17 @@ public class Todo extends BaseEntity {
                 .memberId(memberId)
                 .build();
     }
+
+    public void update(String title, String content, LocalDate dueDate, Boolean completed) {
+        this.title = title;
+        this.content = content;
+        this.dueDate = dueDate;
+        if (completed != null) {
+            this.completed = completed;
+        }
+    }
+
+    public boolean isOwner(Long memberId) {
+        return this.memberId.equals(memberId);
+    }
 }
