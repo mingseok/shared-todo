@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/todos")
@@ -27,6 +29,24 @@ public class TodoController {
         TodoResponse response = todoService.createTodo(request, memberId);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(response));
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<TodoResponse>>> findAll(
+            @RequestParam(required = false) Long memberId,
+            @RequestParam(required = false) Boolean completed,
+            @RequestParam(required = false) Long tagId
+    ) {
+        List<TodoResponse> responses = todoService.findTodos(memberId, completed, tagId);
+        return ResponseEntity.ok(ApiResponse.success(responses));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<TodoResponse>> findById(
+            @PathVariable Long id
+    ) {
+        TodoResponse response = todoService.findTodoById(id);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @PutMapping("/{id}")
