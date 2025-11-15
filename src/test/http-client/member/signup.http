@@ -1,0 +1,71 @@
+### 회원가입 API 테스트
+@baseUrl = http://localhost:8080
+
+# Todo 생성
+# 먼저 IntelliJ에서 SharedTodoApplication 실행
+
+
+### 회원가입 - 성공
+POST {{baseUrl}}/api/public/members
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "test1234",
+  "nickname": "테스트"
+}
+
+
+### 회원가입 - 두 번째 사용자
+POST {{baseUrl}}/api/public/members
+Content-Type: application/json
+
+{
+  "email": "user2@example.com",
+  "password": "user1234",
+  "nickname": "사용자2"
+}
+
+
+### 회원가입 - 이메일 중복 에러
+POST {{baseUrl}}/api/public/members
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "test1234",
+  "nickname": "중복테스트"
+}
+
+
+### 회원가입 - 유효성 검증 실패 (이메일 형식 오류)
+POST {{baseUrl}}/api/public/members
+Content-Type: application/json
+
+{
+  "email": "invalid-email",
+  "password": "test1234",
+  "nickname": "테스트"
+}
+
+
+### 회원가입 - 유효성 검증 실패 (비밀번호 형식 오류)
+POST {{baseUrl}}/api/public/members
+Content-Type: application/json
+
+{
+  "email": "test3@example.com",
+  "password": "1234",
+  "nickname": "테스트"
+}
+
+
+### 회원가입 - 유효성 검증 실패 (닉네임 없음)
+POST {{baseUrl}}/api/public/members
+Content-Type: application/json
+
+{
+  "email": "test4@example.com",
+  "password": "test1234",
+  "nickname": ""
+}
