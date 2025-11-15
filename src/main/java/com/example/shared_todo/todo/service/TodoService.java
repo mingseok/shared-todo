@@ -1,5 +1,9 @@
 package com.example.shared_todo.todo.service;
 
+import com.example.shared_todo.member.entity.Member;
+import com.example.shared_todo.member.exception.MemberError;
+import com.example.shared_todo.member.exception.MemberException;
+import com.example.shared_todo.member.repository.MemberRepository;
 import com.example.shared_todo.tag.entity.Tag;
 import com.example.shared_todo.tag.repository.TagRepository;
 import com.example.shared_todo.todo.entity.Todo;
@@ -8,12 +12,16 @@ import com.example.shared_todo.todo.exception.TodoException;
 import com.example.shared_todo.todo.repository.TodoRepository;
 import com.example.shared_todo.todo.service.dto.request.CreateTodoRequest;
 import com.example.shared_todo.todo.service.dto.request.ReorderTodoRequest;
-import com.example.shared_todo.todo.service.dto.request.TodoOrderRequest;
+import com.example.shared_todo.todo.service.dto.request.TodoOrderItem;
 import com.example.shared_todo.todo.service.dto.request.UpdateTodoRequest;
 import com.example.shared_todo.todo.service.dto.response.TodoResponse;
+import com.example.shared_todo.todo.service.permission.AdminAllAccessPermissionChecker;
+import com.example.shared_todo.todo.service.permission.OwnerOnlyPermissionChecker;
+import com.example.shared_todo.todo.service.permission.TodoPermissionChecker;
 import com.example.shared_todo.todotag.entity.TodoTag;
 import com.example.shared_todo.todotag.repository.TodoTagRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +36,12 @@ public class TodoService {
     private final TodoRepository todoRepository;
     private final TagRepository tagRepository;
     private final TodoTagRepository todoTagRepository;
+    private final MemberRepository memberRepository;
+    private final OwnerOnlyPermissionChecker ownerOnlyPermissionChecker;
+    private final AdminAllAccessPermissionChecker adminAllAccessPermissionChecker;
+
+    @Value("${todo.permission.policy:owner-only}")
+    private String permissionPolicy;
 
     @Transactional
     public TodoResponse createTodo(CreateTodoRequest request, Long memberId) {
@@ -108,7 +122,11 @@ public class TodoService {
         Todo todo = todoRepository.findById(todoId)
                 .orElseThrow(() -> new TodoException(TodoError.TODO_NOT_FOUND));
 
-        if (!todo.isOwner(memberId)) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new MemberException(MemberError.MEMBER_NOT_FOUND));
+
+        TodoPermissionChecker permissionChecker = getPermissionChecker();
+        if (!permissionChecker.canModify(todo, member)) {
             throw new TodoException(TodoError.FORBIDDEN_TODO_ACCESS);
         }
 
@@ -125,18 +143,23 @@ public class TodoService {
     @Transactional
     public void reorderTodos(ReorderTodoRequest request, Long memberId) {
         List<Long> todoIds = request.getOrders().stream()
-                .map(TodoOrderRequest::getTodoId)
+                .map(TodoOrderItem::getTodoId)
                 .toList();
 
         List<Todo> todos = todoRepository.findByIdIn(todoIds);
 
-        for (TodoOrderRequest orderItem : request.getOrders()) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new MemberException(MemberError.MEMBER_NOT_FOUND));
+
+        TodoPermissionChecker permissionChecker = getPermissionChecker();
+
+        for (TodoOrderItem orderItem : request.getOrders()) {
             Todo todo = todos.stream()
                     .filter(t -> t.getId().equals(orderItem.getTodoId()))
                     .findFirst()
                     .orElseThrow(() -> new TodoException(TodoError.TODO_NOT_FOUND));
 
-            if (!todo.isOwner(memberId)) {
+            if (!permissionChecker.canModify(todo, member)) {
                 throw new TodoException(TodoError.FORBIDDEN_TODO_ACCESS);
             }
 
@@ -149,12 +172,23 @@ public class TodoService {
         Todo todo = todoRepository.findById(todoId)
                 .orElseThrow(() -> new TodoException(TodoError.TODO_NOT_FOUND));
 
-        if (!todo.isOwner(memberId)) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new MemberException(MemberError.MEMBER_NOT_FOUND));
+
+        TodoPermissionChecker permissionChecker = getPermissionChecker();
+        if (!permissionChecker.canDelete(todo, member)) {
             throw new TodoException(TodoError.FORBIDDEN_TODO_ACCESS);
         }
 
         todoTagRepository.deleteByTodoId(todoId);
         todoRepository.delete(todo);
+    }
+
+    private TodoPermissionChecker getPermissionChecker() {
+        if ("admin-all-access".equals(permissionPolicy)) {
+            return adminAllAccessPermissionChecker;
+        }
+        return ownerOnlyPermissionChecker;
     }
 
     private void addTagsToTodo(Todo todo, List<Long> tagIds) {

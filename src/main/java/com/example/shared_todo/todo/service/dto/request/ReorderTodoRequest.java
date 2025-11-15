@@ -15,5 +15,5 @@ public class ReorderTodoRequest {
 
     @NotEmpty(message = "순서를 변경할 Todo 목록을 입력해주세요.")
     @Valid
-    private List<TodoOrderRequest> orders;
+    private List<TodoOrderItem> orders;
 }
