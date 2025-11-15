@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -48,14 +49,18 @@ public class TodoService {
     }
 
     @Transactional(readOnly = true)
-    public List<TodoResponse> findTodos(Long memberId, Boolean completed) {
-        List<Todo> todos = findTodosByCondition(memberId, completed);
+    public List<TodoResponse> findTodos(Long memberId, Boolean completed, Long tagId) {
+        List<Todo> todos = findTodosByCondition(memberId, completed, tagId);
         return todos.stream()
                 .map(this::buildTodoResponse)
                 .toList();
     }
 
-    private List<Todo> findTodosByCondition(Long memberId, Boolean completed) {
+    private List<Todo> findTodosByCondition(Long memberId, Boolean completed, Long tagId) {
+        if (tagId != null) {
+            return findTodosByTag(memberId, completed, tagId);
+        }
+
         if (memberId != null && completed != null) {
             return todoRepository.findByMemberIdAndCompleted(memberId, completed);
         }
@@ -66,6 +71,25 @@ public class TodoService {
             return todoRepository.findByCompleted(completed);
         }
         return todoRepository.findAll();
+    }
+
+    private List<Todo> findTodosByTag(Long memberId, Boolean completed, Long tagId) {
+        List<Long> todoIds = todoTagRepository.findTodoIdsByTagId(tagId);
+        
+        if (todoIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        if (memberId != null && completed != null) {
+            return todoRepository.findByIdInAndMemberIdAndCompleted(todoIds, memberId, completed);
+        }
+        if (memberId != null) {
+            return todoRepository.findByIdInAndMemberId(todoIds, memberId);
+        }
+        if (completed != null) {
+            return todoRepository.findByIdInAndCompleted(todoIds, completed);
+        }
+        return todoRepository.findByIdIn(todoIds);
     }
 
     @Transactional
