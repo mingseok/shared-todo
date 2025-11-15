@@ -16,3 +16,10 @@ spring:
 
 jwt:
   secret: ${JWT_SECRET}
+
+todo:
+  permission:
+    # 관리자 권한 정책
+    # owner-only: 관리자도 본인이 생성한 ToDo만 수정/삭제 가능 (정책 2)
+    # admin-all-access: 관리자는 모든 사용자의 ToDo를 수정/삭제 가능 (정책 1)
+    policy: owner-only  # 기본값: owner-only
